@@ -89,6 +89,8 @@ namespace Function
                                 response.VirtualNetwork = subnetId.Substring(startIndex, endIndex-startIndex);
                             }
 
+                            // TODO: Add response to the cache
+
                             break;
                         }
                     }
