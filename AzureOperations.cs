@@ -19,7 +19,7 @@ namespace Function
     {
         [FunctionName("GetDetailsfromMACandIP")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
             ILogger log)
         {
             // Grab the mac address for which we want to return the VM details
@@ -48,13 +48,13 @@ namespace Function
             // Authenticate to Azure. See here for details on the authn attempt order: https://docs.microsoft.com/en-us/dotnet/api/azure.identity.defaultazurecredential?view=azure-dotnet
             var credential = new DefaultAzureCredential(); 
 
-            // Get the network interfaces for this subscription, looking for the MAC and IP of interest
+            // Enumerate through each of the network interfaces for this subscription until we find NIC with the MAC and IP of interest
             var networkManagementClient = new NetworkManagementClient(subscriptionId, credential);
             var networkInterfaces = networkManagementClient.NetworkInterfaces;
-            IEnumerator<NetworkInterface> listNetworkInterfaces = networkInterfaces.List(resourceGroup).GetEnumerator();
-            while (!bFound && listNetworkInterfaces.MoveNext())
+            IEnumerator<NetworkInterface> networkInterfacesEnumerator = networkInterfaces.List(resourceGroup).GetEnumerator();
+            while (!bFound && networkInterfacesEnumerator.MoveNext())
             {
-                NetworkInterface networkInterface = listNetworkInterfaces.Current;
+                NetworkInterface networkInterface = networkInterfacesEnumerator.Current;
                 if (networkInterface.MacAddress.Replace("-", String.Empty).Equals(macAddress))
                 {
                     foreach (NetworkInterfaceIPConfiguration ipConfiguration in networkInterface.IpConfigurations)
@@ -72,7 +72,7 @@ namespace Function
                                 string vmName = vmId.Substring(vmId.LastIndexOf("/")+1);
                                 var vmManagementClient = new ComputeManagementClient(subscriptionId, credential);
                                 var virtualMachines = vmManagementClient.VirtualMachines;
-                                VirtualMachine virtualMachine = virtualMachines.Get(resourceGroup, vmName);
+                                VirtualMachine virtualMachine = await virtualMachines.GetAsync(resourceGroup, vmName);
                                 response.VirtualMachine = virtualMachine.Name;
                                 response.AvailabilityZones = virtualMachine.Zones;
                             }
