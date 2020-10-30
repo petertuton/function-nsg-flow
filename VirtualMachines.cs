@@ -44,21 +44,21 @@ namespace Function
             await foreach (var virtualMachine in vmManagementClient.VirtualMachines.ListAllAsync())
             {
                 // Extract the VM's resource group name, used to lookup the NICs for the VM
-                string resourceGroup = ExtractResourceGroupFromId(virtualMachine.Id);
+                string resourceGroup = Utils.ExtractResourceGroupFromId(virtualMachine.Id);
 
                 // Interate through the VM's network interfaces. NOTE: the value stored in the VM is just a _reference_ to the NIC
                 List<NetworkInterface> networkInterfaces = new List<NetworkInterface>();
                 foreach (var networkInterfaceReference in virtualMachine.NetworkProfile.NetworkInterfaces)
                 {
                     // Get the actual Network Interface from the NIC reference
-                    Azure.ResourceManager.Network.Models.NetworkInterface networkInterface = await networkManagementClient.NetworkInterfaces.GetAsync(resourceGroup, ExtractNameFromId(networkInterfaceReference.Id));
+                    Azure.ResourceManager.Network.Models.NetworkInterface networkInterface = await networkManagementClient.NetworkInterfaces.GetAsync(resourceGroup, Utils.ExtractNameFromId(networkInterfaceReference.Id));
 
                     // Iterate through the NIC's IP configurations
                     IList<NetworkInterfaceIPConfiguration> ipConfigurations = new List<NetworkInterfaceIPConfiguration>();
                     foreach (var ipConfiguration in networkInterface.IpConfigurations)
                     {
                         // Get the assigned public IP address. NOTE: the value stored in the ipConfig is just a _reference_ to the public IP
-                        Azure.ResourceManager.Network.Models.PublicIPAddress publicIpAddress = await networkManagementClient.PublicIPAddresses.GetAsync(ExtractResourceGroupFromId(ipConfiguration.PublicIPAddress.Id), ExtractNameFromId(ipConfiguration.PublicIPAddress.Id));
+                        Azure.ResourceManager.Network.Models.PublicIPAddress publicIpAddress = await networkManagementClient.PublicIPAddresses.GetAsync(Utils.ExtractResourceGroupFromId(ipConfiguration.PublicIPAddress.Id), Utils.ExtractNameFromId(ipConfiguration.PublicIPAddress.Id));
 
                         // Get the ipaddresses
                         ipConfigurations.Add(new NetworkInterfaceIPConfiguration
@@ -89,25 +89,8 @@ namespace Function
             log.LogInformation($"Virtual Machines: {JsonSerializer.Serialize(response)}");
             return new OkObjectResult(response);
         }
-
-        private static string ExtractResourceGroupFromId(string Id)
-        {
-            // Format: "/subscriptions/<xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx>/resourceGroups/<resource-group>/providers/Microsoft.Compute/virtualmachines/<vm-name>"
-            string resourceName = Id.Substring(Id.LastIndexOf("/")+1);
-            string marker1 = "/resourceGroups/";
-            string marker2 = "/providers/";
-            int startIndex = Id.IndexOf(marker1)+marker1.Length;
-            int endIndex = Id.IndexOf(marker2, startIndex);
-            return Id.Substring(startIndex, endIndex-startIndex);
-        }
-
-        private static string ExtractNameFromId(string Id)
-        {
-            // Format: "/subscriptions/<xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx>/resourceGroups/<resource-group>/providers/<provider>/<model>/<name>"
-            return Id.Substring(Id.LastIndexOf("/")+1);
-        }
     }
-
+    
     public class VMs
     {
         public string SubscriptionId { get; set; }
