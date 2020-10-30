@@ -76,13 +76,18 @@ namespace Function
                     });
                 }
 
+                // Iterate through the zones, adding the location name as a prefix
+                IList<string> zones = new List<string>();
+                foreach (var zone in virtualMachine.Zones)
+                    zones.Add($"{virtualMachine.Location}-{zone}");
+
                 // Add the VM's details to the response
                 response.VirtualMachines.Add(new VirtualMachine
                 {
                     Name = virtualMachine.Name,
                     Region = virtualMachine.Location,
                     NetworkInterfaces = networkInterfaces,
-                    AvailabilityZones = virtualMachine.Zones
+                    AvailabilityZones = zones
                 });
             }
 
@@ -90,7 +95,7 @@ namespace Function
             return new OkObjectResult(response);
         }
     }
-    
+
     public class VMs
     {
         public string SubscriptionId { get; set; }
