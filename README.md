@@ -13,3 +13,7 @@ Requires environment variables for the following: <br>
 "blobContainerName"
 - name of blob container with NSG Flow logs
 ```
+```
+"FlowLogVersion"
+- version of flow logs
+```
