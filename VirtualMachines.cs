@@ -58,13 +58,17 @@ namespace Function
                     foreach (var ipConfiguration in networkInterface.IpConfigurations)
                     {
                         // Get the assigned public IP address. NOTE: the value stored in the ipConfig is just a _reference_ to the public IP
-                        Azure.ResourceManager.Network.Models.PublicIPAddress publicIpAddress = await networkManagementClient.PublicIPAddresses.GetAsync(Utils.ExtractResourceGroupFromId(ipConfiguration.PublicIPAddress.Id), Utils.ExtractNameFromId(ipConfiguration.PublicIPAddress.Id));
+                        Azure.ResourceManager.Network.Models.PublicIPAddress publicIpAddress = null;
+                        if (ipConfiguration.PublicIPAddress != null)
+                        {
+                            publicIpAddress = await networkManagementClient.PublicIPAddresses.GetAsync(Utils.ExtractResourceGroupFromId(ipConfiguration.PublicIPAddress.Id), Utils.ExtractNameFromId(ipConfiguration.PublicIPAddress.Id));
+                        }
 
                         // Get the ipaddresses
                         ipConfigurations.Add(new NetworkInterfaceIPConfiguration
                         {
                             PrivateIPAddress = ipConfiguration.PrivateIPAddress,
-                            PublicIPAddress = publicIpAddress.IpAddress
+                            PublicIPAddress = publicIpAddress?.IpAddress
                         });
                         
                     }

@@ -48,7 +48,8 @@ namespace Function
                 {
                     subnets.Add(new Subnet{
                         Name = subnet.Name,
-                        AddressPrefix = subnet.AddressPrefix
+                        AddressPrefix = subnet.AddressPrefix,
+                        AddressPrefixes = subnet.AddressPrefixes
                     });
                 }
 
@@ -85,5 +86,6 @@ namespace Function
     {
         public string Name { get; set; }
         public string AddressPrefix { get; set; }
+        public IList<string> AddressPrefixes { get; set; }
     }
 }
