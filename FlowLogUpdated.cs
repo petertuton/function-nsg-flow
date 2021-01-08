@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -9,16 +8,16 @@ using Microsoft.Azure.Cosmos.Table;
 
 namespace Function
 {
-    public static class ProcessNSGFlow
+    public static class FlowLogUpdated
     {
-        [FunctionName("ProcessNSGFlow")]
-        public static async Task Run(
+        [FunctionName(nameof(FlowLogUpdated))]
+        public static void Run(
             [BlobTrigger("%blobContainerName%/resourceId=/SUBSCRIPTIONS/{subId}/RESOURCEGROUPS/{resourceGroup}/PROVIDERS/MICROSOFT.NETWORK/NETWORKSECURITYGROUPS/{nsgName}/y={blobYear}/m={blobMonth}/d={blobDay}/h={blobHour}/m={blobMinute}/macAddress={mac}/PT1H.json", Connection = "nsgSourceDataAccount")] string myBlob, 
             [Table("checkpoints", Connection = "AzureWebJobsStorage")] CloudTable checkpointTable,
             string subId, string resourceGroup, string nsgName, string blobYear, string blobMonth, string blobDay, string blobHour, string blobMinute, string mac,
             ILogger log)
         {
-            log.LogInformation($"ProcessNSGFlow triggered on blob\n Name:/resourceId=/SUBSCRIPTIONS/{subId}/RESOURCEGROUPS/{resourceGroup}/PROVIDERS/MICROSOFT.NETWORK/NETWORKSECURITYGROUPS/{nsgName}/y={blobYear}/m={blobMonth}/d={blobDay}/h={blobHour}/m={blobMinute}/macAddress={mac}/PT1H.json \n Size: {myBlob.Length} Bytes");
+            log.LogInformation($"{nameof(FlowLogUpdated)} triggered on blob\n\tName:/resourceId=/SUBSCRIPTIONS/{subId}/RESOURCEGROUPS/{resourceGroup}/PROVIDERS/MICROSOFT.NETWORK/NETWORKSECURITYGROUPS/{nsgName}/y={blobYear}/m={blobMonth}/d={blobDay}/h={blobHour}/m={blobMinute}/macAddress={mac}/PT1H.json\n\tSize: {myBlob.Length} Bytes");
 
             // Get the Flow Log version to process
             float version = float.Parse(System.Environment.GetEnvironmentVariable("FlowLogVersion"));
@@ -40,8 +39,6 @@ namespace Function
             // If the index isn't 0, it's appended data, so prepend the records property
             if (index != 0)
                 newContent = newContent.Insert(0, "{\"records\":[");
-
-            // log.LogInformation(newContent);
 
             // Deserialize the new records
             var serializerOptions = new JsonSerializerOptions { Converters = { new FlowLogTupleConverter(version)} };

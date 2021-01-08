@@ -6,7 +6,7 @@ namespace Function
 {
     public class BlobDetails
     {
-        //const string macPath = "hybridflowlogtest-networksecuritygroupflowevent/resourceId=   0, 1
+        //const string macPath = "insights-logs-networksecuritygroupflowevent/resourceId=   0, 1
         //SUBSCRIPTIONS/{subId} 2, 3
         //RESOURCEGROUPS/{resourceGroup} 4, 5
         //PROVIDERS/MICROSOFT.NETWORK 6, 7
@@ -28,19 +28,19 @@ namespace Function
         public string Minute { get; set; }
         public string Mac { get; set; }
 
-        public BlobDetails(string path)
+        public BlobDetails(string path, int offset = 0)
         {
             var parts = path.Split('/');
 
-            SubscriptionId = parts[3];
-            ResourceGroupName = parts[5];
-            NsgName = parts[9];
-            Year = parts[10].Split('=')[1];
-            Month = parts[11].Split('=')[1];
-            Day = parts[12].Split('=')[1];
-            Hour = parts[13].Split('=')[1];
-            Minute = parts[14].Split('=')[1];
-            Mac = parts[15].Split('=')[1];
+            SubscriptionId = parts[3+offset];
+            ResourceGroupName = parts[5+offset];
+            NsgName = parts[9+offset];
+            Year = parts[10+offset].Split('=')[1];
+            Month = parts[11+offset].Split('=')[1];
+            Day = parts[12+offset].Split('=')[1];
+            Hour = parts[13+offset].Split('=')[1];
+            Minute = parts[14+offset].Split('=')[1];
+            Mac = parts[15+offset].Split('=')[1];
         }
 
         public BlobDetails(string subscriptionId, string resourceGroupName, string nsgName, string year, string month, string day, string hour, string minute, string mac)

@@ -11,23 +11,23 @@ namespace Function
         {
         }
 
-        public Checkpoint(string partitionKey, string rowKey, string blockName, int index)
+        public Checkpoint(string partitionKey, string rowKey, int index)
         {
             PartitionKey = partitionKey;
             RowKey = rowKey;
             CheckpointIndex = index;
         }
 
-        public static Checkpoint GetCheckpoint(BlobDetails blobDetails, CloudTable checkpointTable)
+        public static Checkpoint GetCheckpoint(BlobDetails blobDetails, CloudTable checkpointTable, bool createNew = true)
         {
-            TableOperation operation = TableOperation.Retrieve<Checkpoint>(
-                blobDetails.GetPartitionKey(), blobDetails.GetRowKey());
+            TableOperation operation = TableOperation.Retrieve<Checkpoint>(blobDetails.GetPartitionKey(), blobDetails.GetRowKey());
             TableResult result = checkpointTable.ExecuteAsync(operation).Result;
 
             Checkpoint checkpoint = (Checkpoint)result.Result;
-            if (checkpoint == null)
+            if (checkpoint == null && createNew)
             {
-                checkpoint = new Checkpoint(blobDetails.GetPartitionKey(), blobDetails.GetRowKey(), "", 0);
+                // Exiting checkpoint doesn't exist - create a new checkpoint
+                checkpoint = new Checkpoint(blobDetails.GetPartitionKey(), blobDetails.GetRowKey(), 0);
             }
 
             return checkpoint;
@@ -36,9 +36,12 @@ namespace Function
         public void PutCheckpoint(CloudTable checkpointTable, int index)
         {
             CheckpointIndex = index;
+            checkpointTable.ExecuteAsync(TableOperation.InsertOrReplace(this)).Wait();
+        }
 
-            TableOperation operation = TableOperation.InsertOrReplace(this);
-            checkpointTable.ExecuteAsync(operation).Wait();
+        public void DeleteCheckpoint(CloudTable checkpointTable)
+        {
+            checkpointTable.ExecuteAsync(TableOperation.Delete(this)).Wait();
         }
     }
 }
